@@ -1,0 +1,169 @@
+# hipmer_env.sh-EXAMPLE
+#
+# This script is an example of a HIPMER_ENV_SCRIPT that can be
+# copy, modify and or link to your top-level source tree as "hipmer_env.sh"
+# and it will be automatically used when calling ./bootstrap_hipmer_env.sh
+#
+# This example script can be customized for any particular machine environment
+# see .*_deploy/emv*.sh for examples on Linux clusters, NERSC supercomputers and MacOSX
+#
+# If you find a working configuration, please contact the developers and we can add your
+# hipmer_env.sh script to the HipMer repository
+#
+
+#
+# Below are a description of the environmental variables that impact the build, install and
+# execution envionments
+#
+
+#
+# HIPMER_ENV - the suffix for the build and install directories to organize multiple installs
+#
+# export HIPMER_ENV=Linux
+#
+
+#
+# HIPMER_BUILD_TYPE - the build type (Release or Debug)
+#
+# export HIPMER_BUILD_TYPE=Release
+# 
+
+#
+# HIPMER_BUILD_OPTS - additional build flags and options for the HipMer build
+#
+# export HIPMER_BUILD_OPTS=" -DHIPMER_KHASH=0 "
+# export HIPMER_BUILD_OPTS="-DCMAKE_UPC_COMPILER_INIT='$(which cc)\ -h\ upc' -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX"
+# export HIPMER_BUILD_OPTS="-DZLIB_ROOT=/soft/libraries/alcf/20151124/gcc/ZLIB -DDISCOVER_LIBC=1"
+# export HIPMER_BUILD_OPTS="-DCMAKE_UPC_FLAGS_INIT='-tv'"
+# 
+
+#
+# optionally load modules or other software dependencies
+#
+# export PATH=/path/to/my/install/bin:$PATH
+# or
+# module load cmake 2>/dev/null
+# module load git 2>/dev/null
+# module load bupc-narrow  2>/dev/null
+# module list
+#
+
+#
+# UPC_SHARED_HEAP_SIZE - the number of megabytes to use by default.  A per-thread value, accepts 'G', 'M' 'K' suffix modifiers
+#
+# export UPC_SHARED_HEAP_SIZE=${UPC_SHARED_HEAP_SIZE:=1500} 
+#
+
+#
+# CC, CXX, MPICC, MPICXX, UPCC - the paths to the required set of compilers for your system
+#
+# export CC=$(which cc)
+# export CXX=$(which c++)
+# export MPICC=$(which mpicc)
+# export MPICXX=$(which mpic++)
+# export UPCC=$(which upcc)
+#
+# or
+# 
+# export CC=$(which icc)
+# export CXX=$(which icpc)
+# export MPICC=$(which icc)
+# export MPICXX=$(which icpc)
+#
+
+#
+# UPCRUN, MPIRUN - the paths to upcrun and mpirun for your system
+#
+# export UPCRUN=$(which upcrun)
+# export MPIRUN=$(which mpirun)
+#
+
+#
+# CORES_PER_NODE - The default number of cores that each node will have and use
+# by default this will be the # cores on the machine that HipMer was compiled on
+#
+# export CORES_PER_NODE=${CORES_PER_NODE:=16}
+# export CORES_PER_NODE=$(sysctl -a | awk '/^machdep.cpu.core_count/ {print $2}')
+#
+
+#
+# HYPERTHREADS - the number of hyperthreads by default (accounted for in CORES_PER_NODE)
+# When HYPERTHREADS are >1 then spin waits are disabled to avoid live-lock scenarios
+#
+# export HYPERTHREADS=1 # to always disable them
+# export HYPERTHREADS=${HYPERTHREADS=2} # to enable 2 threads by default, but allow environmental override
+#
+
+# 
+# TMPDIR - fast local directory
+#
+# export TMPDIR=${TMPDIR:=/tmp}
+#
+
+# 
+# SCRATCH - the directory, expected to be shared across all nodes in a job, where install and runs
+# will be performed by default
+#
+# export SCRATCH=${HOME}/scratch
+#
+
+#
+# HIPMER_INSTALL - the directory where installed binaries of HipMer will be placed
+#
+# export HIPMER_INSTALL=${SCRATCH}/hipmer-install-${HIPMER_ENV}
+#
+
+#
+# INSTALL_PREFIX - the base directory underwhich HipMer will be installed (if HIPMER_INSTALL prefix is not set)
+#
+# export INSTALL_PREFIX=${INSTALL_PREFIX:=$SCRATCH/hipmer-install-$(uname -s)}
+#
+
+#
+# HIPMER_BUILD - the directory where HipMer is built and compiled
+#
+# export HIPMER_BUILD=${HIPMER_BUILD:=${TMPDIR}/${USER}-hipmer-build-${HIPMER_ENV}}
+#
+
+#
+# BUILD_THREADS - the number of threads to use while building
+#
+# export BUILD_THREADS=${BUILD_THREADS:=CORES_PER_NODE}
+#
+
+#########################################################################################################
+#
+# The following are more build options supported as either environment variables (i.e. set here)
+# or as cmake options (i.e. set in HIPMER_BUILD_OPTS="-DOPT=val [...]")
+#
+#########################################################################################################
+
+# export HIPMER_FULL_BUILD=1                                # if 1, then build all stand-alone stage executables along with the single-exec main-*
+# export HIPMER_STATIC_BUILD=                               # if 1, build a static binary (as much as possible)... required for some systems
+# export HIPMER_KHASH=1                                     # if 1, then compile and use khash.hh for hashing, if 0, use std::unordered_map
+# export HIPMER_USE_PTHREADS=0                              # compile pthread support (currently not supported) (with default # of threads per node)
+# export HIPMER_READ_BUFFER=1048576                         # 
+# export HIPMER_MAX_KMER_SIZE=256                           #
+# export HIPMER_KMER_LENGTHS='32;64;96;128;160;192;224;256' # the range of kmers to build (step 32)
+# export HIPMER_MAX_FILE_PATH=256                           # the maximum supported file path length
+# export HIPMER_MAX_READ_NAME=80                            # the maximum supported read name length
+# export HIPMER_MAX_LIBRARIES=128                           # the maximum number of lib_seq entries in the config file
+# export HIPMER_LIB_NAME_LEN=15                             # the maximum length of the lib_name field in the lib_seq entry
+# export HIPMER_VERBOSE=2                                   # the level of messages.  0 - only print DIE & WARN, 1 - print INFO too, 2 - log INFO too (to per-thread logfile), 3 log DBG, 4 log DBG2
+# export HIPMER_BLOOM=64                                    # if == 64, use a 64-bit clean bloom filter supporting >2^31 entries
+# export HIPMER_DISCOVER_LIBC=                              # set to 1 for machines that need to link with a specific static libc that the compiler may not find properly (i.e. bluegene)
+# export HIPMER_SLACK=20                                    # SLACK paramter for meraligner
+# export HIPMER_CHUNK_SIZE=100                              # CHUNK_SIZE parameter for meraligner
+# export HIPMER_UPC_ALLOCATOR=                              # if set, use the UPC shared memory for the kmer hash & bloom filter (only set if most memory is shared)
+# export HIPMER_NO_UPC_MEMORY_POOL=                         # if UPC shared memory is used for UFX, do not use the upc_memory_pool allocator
+# export HIPMER_BROKEN_ALLOCATOR_REBIND=                    # set if using the intel compiler or get this error "error: no instance of constructor "upc_allocator::MemoryPool..."
+# export HIPMER_UPCC=${UPCC:=upcc}                          # set to tell CMake how to invoke the UPC compiler
+# export HIPMER_UPCC_FLAGS=                                 # additional compiler flags for upcc (please use HIPMER_BUILD_TYPE to control Release vs Debug build)
+# export HIPMER_POSIX_SHM=                                  # auto-detected from upcc whether it was configured with --disable-pshm-posix (or not)
+# export PHYS_MEM_MB=                                       # auto-detected from /proc/meminfo.  Override this value if the launch host is significantly different from the execute host
+# export HIPMER_SHARED_MEM_PCT=                             # defaults to 50 on posix pshm configurations and 80 on others, half this value is used if CACHED_IO=1
+# export HIPMER_TEST=                                       # build and install optional testing executables
+# export HIPMER_NO_UNIT_TESTS=                              # disable building of unit tests (necessary on some platforms like edison at the moment)
+# export HIPMER_NO_GZIP=                                    # set to 1 to disable gzip of temporary files to reduce memory and disk needs
+
+

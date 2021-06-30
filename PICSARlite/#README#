@@ -1,0 +1,9 @@
+On cori
+
+BUILD:
+module load openmpi
+make
+
+RUN:
+salloc -N 1 -C haswell -q interactive -t 00:02:00
+srun -n 1 -c 16 ./fortran_bin/picsar

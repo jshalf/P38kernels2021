@@ -1,0 +1,98 @@
+src/init_external.F90:  SUBROUTINE init_params_external
+src/init_external.F90:  SUBROUTINE evec3d_push_norder
+src/init_external.F90:SUBROUTINE bvec3d_push_norder
+src/init_external.F90:SUBROUTINE solve_maxwell_fdtd_pxr
+src/submain.F90:SUBROUTINE step
+src/submain.F90:SUBROUTINE initall
+src/submain.F90:SUBROUTINE estimate_total_memory_consumption
+src/submain.F90:SUBROUTINE init_stencil_coefficients
+src/submain.F90:SUBROUTINE FD_weights
+src/boundary_conditions/field_boundaries.F90:  SUBROUTINE field_bc
+src/boundary_conditions/field_boundaries.F90:  SUBROUTINE exchange_mpi_3d_grid_array_with_guards
+src/boundary_conditions/field_boundaries.F90:  SUBROUTINE exchange_mpi_3d_grid_array_with_guards_nonblocking
+src/boundary_conditions/field_boundaries.F90:  SUBROUTINE summation_bcs
+src/boundary_conditions/field_boundaries.F90:  SUBROUTINE summation_bcs_nonblocking
+src/boundary_conditions/field_boundaries.F90:  SUBROUTINE summation_bcs_persistent_jx
+src/boundary_conditions/field_boundaries.F90:  SUBROUTINE summation_bcs_persistent_jy
+src/boundary_conditions/field_boundaries.F90:  SUBROUTINE summation_bcs_persistent_jz
+src/boundary_conditions/field_boundaries.F90:  SUBROUTINE efield_bcs
+src/boundary_conditions/field_boundaries.F90:  SUBROUTINE bfield_bcs
+src/boundary_conditions/field_boundaries.F90:  SUBROUTINE current_bcs
+src/boundary_conditions/field_boundaries.F90:  SUBROUTINE charge_bcs
+src/boundary_conditions/particle_boundaries.F90:  SUBROUTINE particle_bcs
+src/boundary_conditions/particle_boundaries.F90:  SUBROUTINE particle_bcs_tiles
+src/boundary_conditions/particle_boundaries.F90:  SUBROUTINE particle_bcs_tiles_openmp
+src/boundary_conditions/particle_boundaries.F90:SUBROUTINE particle_bcs_mpi_blocking
+src/boundary_conditions/particle_boundaries.F90:SUBROUTINE particle_bcs_mpi_non_blocking
+src/boundary_conditions/particle_boundaries.F90:SUBROUTINE particle_bcs_tiles_and_mpi_3d
+src/field_gathering/field_gathering_manager_3d.F90:SUBROUTINE field_gathering
+src/field_gathering/field_gathering_manager_3d.F90:SUBROUTINE field_gathering_sub
+src/field_gathering/field_gathering_manager_3d.F90:SUBROUTINE geteb3d_energy_conserving
+src/field_gathering/field_gathering_manager_3d.F90:SUBROUTINE geteb3d_energy_conserving_generic
+src/housekeeping/sorting.F90:  SUBROUTINE pxr_particle_sorting
+src/housekeeping/sorting.F90:  SUBROUTINE particle_sorting_sub
+src/housekeeping/sorting.F90:SUBROUTINE pxr_particle_bin_sorting
+src/initialization/control_file.F90:  SUBROUTINE default_init
+src/initialization/control_file.F90:  SUBROUTINE read_from_cl
+src/initialization/control_file.F90:  SUBROUTINE read_input_file
+src/initialization/control_file.F90:  SUBROUTINE read_cpusplit_section
+src/initialization/control_file.F90:  SUBROUTINE read_plasma_section
+src/initialization/control_file.F90:  SUBROUTINE read_solver_section
+src/initialization/control_file.F90:  SUBROUTINE read_sorting_section
+src/initialization/control_file.F90:  SUBROUTINE read_timestat_section
+src/initialization/control_file.F90:  SUBROUTINE read_main_section
+src/initialization/control_file.F90:  SUBROUTINE read_species_section
+src/initialization/control_file.F90:  SUBROUTINE read_particle_dumps_section
+src/initialization/control_file.F90:  SUBROUTINE read_output_section
+src/initialization/control_file.F90:  SUBROUTINE read_temporal_output_section
+src/initialization/control_file.F90:  SUBROUTINE read_antenna_section
+src/initialization/control_file.F90:  SUBROUTINE init_species_section
+src/particle_pushers/particle_pusher_manager_3d.F90:SUBROUTINE field_gathering_plus_particle_pusher
+src/particle_pushers/particle_pusher_manager_3d.F90:SUBROUTINE field_gathering_plus_particle_pusher_sub
+src/particle_pushers/particle_pusher_manager_3d.F90:SUBROUTINE field_gathering_plus_particle_pusher_cacheblock_sub
+src/particle_pushers/particle_pusher_manager_3d.F90:SUBROUTINE particle_pusher_sub
+src/particle_pushers/particle_pusher_manager_3d.F90:SUBROUTINE field_gathering_plus_particle_pusher_1_1_1
+src/field_gathering/energy_conserving/field_gathering_on_3d.F90:subroutine pxr_getb3d_n_energy_conserving
+src/field_gathering/energy_conserving/field_gathering_on_3d.F90:subroutine pxr_gete3d_n_energy_conserving
+src/field_solvers/Maxwell/maxwell_solver_manager.F90:SUBROUTINE push_bfield
+src/field_solvers/Maxwell/maxwell_solver_manager.F90:SUBROUTINE push_efield
+src/parallelization/mpi/mpi_routines.F90:  SUBROUTINE mpi_minimal_init
+src/parallelization/mpi/mpi_routines.F90:  SUBROUTINE setup_communicator
+src/parallelization/mpi/mpi_routines.F90:SUBROUTINE mpi_initialise
+src/parallelization/mpi/mpi_routines.F90:SUBROUTINE compute_simulation_axis
+src/parallelization/mpi/mpi_routines.F90:SUBROUTINE allocate_grid_quantities
+src/parallelization/mpi/mpi_routines.F90:SUBROUTINE mpi_close
+src/parallelization/mpi/mpi_routines.F90:SUBROUTINE time_statistics
+src/parallelization/mpi/mpi_routines.F90:SUBROUTINE time_statistics_per_iteration
+src/parallelization/mpi/mpi_routines.F90:SUBROUTINE get_local_grid_mem
+src/parallelization/mpi/mpi_routines.F90:SUBROUTINE get_global_grid_mem
+src/parallelization/tiling/tiling.F90:  SUBROUTINE set_tile_split
+src/parallelization/tiling/tiling.F90:  SUBROUTINE set_tile_split_for_species
+src/parallelization/tiling/tiling.F90:  SUBROUTINE add_particle_to_species
+src/parallelization/tiling/tiling.F90:  SUBROUTINE add_particle_at_tile
+src/parallelization/tiling/tiling.F90:  SUBROUTINE add_group_of_particles_at_tile
+src/parallelization/tiling/tiling.F90:  SUBROUTINE rm_particles_from_species_with_mask
+src/parallelization/tiling/tiling.F90:  SUBROUTINE rm_particles_from_species
+src/parallelization/tiling/tiling.F90:  SUBROUTINE rm_particle_at_tile
+src/parallelization/tiling/tiling.F90:  SUBROUTINE allocate_tile_arrays
+src/parallelization/tiling/tiling.F90:  SUBROUTINE init_tile_arrays
+src/parallelization/tiling/tiling.F90:  SUBROUTINE init_tile_arrays_for_species
+src/parallelization/tiling/tiling.F90:  SUBROUTINE load_particles
+src/parallelization/tiling/tiling.F90:  SUBROUTINE resize_particle_arrays
+src/parallelization/tiling/tiling.F90:  SUBROUTINE resize_1D_array_real
+src/parallelization/tiling/tiling.F90:  SUBROUTINE resize_2D_array_real
+src/parallelization/tiling/tiling.F90:  SUBROUTINE resize_3D_array_real
+src/parallelization/tiling/tiling.F90:  SUBROUTINE get_local_tile_mem
+src/parallelization/tiling/tiling.F90:  SUBROUTINE get_global_tile_mem
+src/particle_deposition/current_deposition/current_deposition_manager_3d.F90:SUBROUTINE depose_jxjyjz
+src/particle_deposition/current_deposition/current_deposition_manager_3d.F90:SUBROUTINE depose_jxjyjz_generic
+src/particle_deposition/current_deposition/current_deposition_manager_3d.F90:SUBROUTINE pxrdepose_currents_on_grid_jxjyjz
+src/particle_deposition/current_deposition/current_deposition_manager_3d.F90:    SUBROUTINE depose_jxjyjz
+src/particle_deposition/current_deposition/current_deposition_manager_3d.F90:SUBROUTINE pxrdepose_currents_on_grid_jxjyjz_classical_sub_seq
+src/particle_deposition/current_deposition/current_deposition_manager_3d.F90:    SUBROUTINE func_order
+src/particle_pushers/boris_pusher/boris_3d.F90:SUBROUTINE pxr_boris_push_u_3d
+src/particle_pushers/boris_pusher/boris_3d.F90:SUBROUTINE pxr_pushxyz
+src/particle_pushers/boris_pusher/boris_3d.F90:SUBROUTINE pxr_set_gamma
+src/field_solvers/Maxwell/yee_solver/yee.F90:subroutine pxrpush_em3d_evec
+src/field_solvers/Maxwell/yee_solver/yee.F90:subroutine pxrpush_em3d_bvec
+src/particle_deposition/current_deposition/direct/direct_current_deposition_3d.F90:SUBROUTINE depose_jxjyjz_scalar_1_1_1

@@ -1,0 +1,266 @@
+variables:
+  GIT_STRATEGY: fetch
+  REGISTRY: registry.gitlab.com
+  APPLICATION: MetaHipMer
+  TEST_IMAGE: $REGISTRY/$REGISTRY_USER/$APPLICATION:latest
+  RELEASE_IMAGE: $REGISTRY/$REGISTRY_USER/$APPLICATION:$CI_BUILD_REF_NAME
+
+
+stages:
+  - build # all
+  - validation # regan-sls, gpint
+  - accuracy # regan-sls, edison
+#  - cluster # edison, cori, cori-knl, denovo
+
+
+#
+# denovo
+#
+
+denovo:build:
+  stage: build
+  tags:
+    - Denovo
+  script:
+    - set -e
+    - export HIPMER_DATA=${SCRATCH}
+    - export BASE=${SCRATCH}/tmp/gitlab-runner-scratch-DeNovo-${USER}
+    - export SCRATCH=${BASE}/inst-${CI_COMMIT_SHA}
+    - mkdir -p ${BASE}
+    - find ${BASE} -maxdepth 1 '(' -name 'inst-*' -o -name '*hipmer-*' ')' -mtime +7 -type d -exec rm -rf '{}' ';'
+    - rm -rf ${SCRATCH}
+    - mkdir -p ${SCRATCH}/runs
+    - export CACHED_IO=1
+    - export AUTO_RESTART=0
+    - BUILD_TMP=/tmp/build-${CI_COMMIT_SHA}
+    - mkdir -p ${BUILD_TMP}
+    - ./bootstrap_hipmer_env.sh DIST_CLEAN=1 TMPDIR=${BUILD_TMP} HIPMER_ENV_SCRIPT=.denovo_deploy/env-sysv-debug.sh  INSTALL_PREFIX=${SCRATCH} build
+    - ./bootstrap_hipmer_env.sh              TMPDIR=${BUILD_TMP} HIPMER_ENV_SCRIPT=.denovo_deploy/env-sysv-debug.sh  INSTALL_PREFIX=${SCRATCH} install
+    - ./bootstrap_hipmer_env.sh                                  HIPMER_ENV_SCRIPT=.denovo_deploy/env-sysv-debug.sh  INSTALL_PREFIX=${SCRATCH} SCRATCH=${SCRATCH}/runs GASNET_BACKTRACE=1 test_hipmer.sh
+    - ./bootstrap_hipmer_env.sh DIST_CLEAN=1 TMPDIR=${BUILD_TMP} HIPMER_ENV_SCRIPT=.denovo_deploy/env-sysv.sh        INSTALL_PREFIX=${SCRATCH} install
+    - rm -r ${BUILD_TMP}
+
+denovo:validate:
+  stage: validation
+  tags:
+    - Denovo
+  script:
+    - set -e
+    - export GASNET_BACKTRACE=1
+    - export HIPMER_DATA=${SCRATCH}
+    - export BASE=${SCRATCH}/tmp/gitlab-runner-scratch-DeNovo-${USER}
+    - export SCRATCH=${BASE}/inst-${CI_COMMIT_SHA}
+    - export CACHED_ID=0
+    - export AUTO_RESTART=0
+    - export HIPMER_ENV_SCRIPT=$(pwd)/.denovo_deploy/env-sysv.sh 
+    - ./bootstrap_hipmer_env.sh INSTALL_PREFIX=${SCRATCH} SCRATCH=${SCRATCH}/runs GASNET_BACKTRACE=1 test_hipmer.sh validation-par_hmm
+    - export CACHED_IO=1
+    - ./bootstrap_hipmer_env.sh INSTALL_PREFIX=${SCRATCH} SCRATCH=${SCRATCH}/runs GASNET_BACKTRACE=1 test_hipmer.sh validation-mg ecoli
+#    - export CACHED_IO=1
+#    - ./bootstrap_hipmer_env.sh INSTALL_PREFIX=${SCRATCH} SCRATCH=${SCRATCH}/runs GASNET_BACKTRACE=1 test_hipmer.sh ecoli
+
+denovo:accuracy:
+  stage: accuracy
+  tags:
+    - Denovo
+  script:
+    - set -e
+    - export HIPMER_DATA=${SCRATCH}
+    - export BASE=${SCRATCH}/tmp/gitlab-runner-scratch-DeNovo-${USER}
+    - export SCRATCH=${BASE}/inst-${CI_COMMIT_SHA}
+    - export CACHED_ID=0
+    - export AUTO_RESTART=0
+    - salloc --nodes=4  --exclusive --ntasks-per-node=16 --time=30:00  ./bootstrap_hipmer_env.sh SCRATCH=${SCRATCH}/runs sbatch_denovo.sh test_hipmer.sh validation-mg ecoli chr14-benchmark
+
+#
+# regan-sl3
+#
+
+regan-sl3:build:
+  stage: build
+  tags:
+    - Linux
+  script:
+    - set -e
+    - export BASE=${SCRATCH}/tmp/gitlab-runner-scratch-SL3-${USER}
+    - mkdir -p ${BASE}
+    - export SCRATCH=${BASE}/inst-${CI_COMMIT_SHA}
+    - find ${BASE} -maxdepth 1 '(' -name 'inst-*' -o -name '*hipmer-*' ')' -mtime +7 -type d -exec rm -rf '{}' ';'
+    - rm -rf ${SCRATCH}
+    - mkdir -p ${SCRATCH}/runs
+    - export CACHED_IO=0
+    - export AUTO_RESTART=0
+    - ./bootstrap_hipmer_env.sh PATH=${PATH}:$HOME/install/bin TMPDIR=${SCRATCH} DIST_CLEAN=1 HIPMER_ENV_SCRIPT=.generic_deploy/env-debug.sh INSTALL_PREFIX=${SCRATCH} build
+    - ./bootstrap_hipmer_env.sh PATH=${PATH}:$HOME/install/bin TMPDIR=${SCRATCH}              HIPMER_ENV_SCRIPT=.generic_deploy/env-debug.sh INSTALL_PREFIX=${SCRATCH} install
+    - ./bootstrap_hipmer_env.sh PATH=${PATH}:$HOME/install/bin                                HIPMER_ENV_SCRIPT=.generic_deploy/env-debug.sh INSTALL_PREFIX=${SCRATCH} SCRATCH=${SCRATCH}/runs GASNET_BACKTRACE=1 test_hipmer.sh
+    - ./bootstrap_hipmer_env.sh PATH=${PATH}:$HOME/install/bin TMPDIR=${SCRATCH} DIST_CLEAN=1 HIPMER_ENV_SCRIPT=.generic_deploy/env.sh       INSTALL_PREFIX=${SCRATCH} build
+    - ./bootstrap_hipmer_env.sh PATH=${PATH}:$HOME/install/bin TMPDIR=${SCRATCH}              HIPMER_ENV_SCRIPT=.generic_deploy/env.sh       INSTALL_PREFIX=${SCRATCH} install
+
+
+regan-sl3:validate:
+  stage: validation
+  tags:
+    - Linux
+  script:
+    - set -e
+    - export GASNET_BACKTRACE=1
+    - export BASE=${SCRATCH}/tmp/gitlab-runner-scratch-SL3-${USER}
+    - export SCRATCH=${BASE}/inst-${CI_COMMIT_SHA}
+    - export CACHED_IO=0
+    - export AUTO_RESTART=0
+    - export HIPMER_ENV_SCRIPT=$(pwd)/.generic_deploy/env-debug.sh
+    - export INSTALL_PREFIX=${SCRATCH}
+    - export PATH=${PATH}:${HOME}/install/bin
+    - ./bootstrap_hipmer_env.sh SCRATCH=${SCRATCH}/runs test_hipmer.sh
+    - export CACHED_IO=1
+    - ./bootstrap_hipmer_env.sh SCRATCH=${SCRATCH}/runs GASNET_BACKTRACE=1 test_hipmer.sh validation-mg
+    - ./bootstrap_hipmer_env.sh SCRATCH=${SCRATCH}/runs GASNET_BACKTRACE=1 test_hipmer.sh validation
+    - ./bootstrap_hipmer_env.sh SCRATCH=${SCRATCH}/runs GASNET_BACKTRACE=1 test_hipmer.sh validation-par_hmm
+
+
+regan-sl3:accuracy:
+  stage: accuracy
+  tags:
+    - Linux
+  script:
+    - set -e
+    - export BASE=${SCRATCH}/tmp/gitlab-runner-scratch-SL3-${USER}
+    - export HIPMER_DATA=${BASE}/data
+    - mkdir -p ${HIPMER_DATA}
+    - export SCRATCH=${BASE}/inst-${CI_COMMIT_SHA}
+    - export AUTO_RESTART=0
+    - export CACHED_IO=1
+    - export HIPMER_ENV_SCRIPT=$(pwd)/.generic_deploy/env.sh
+    - export INSTALL_PREFIX=${SCRATCH}
+    - echo "Download data sets and install in ${SCRATCH}/runs, cache in ${HIPMER_DATA} between CI instances"
+    - ./bootstrap_hipmer_env.sh HIPMER_ECOLI_DATA=${HIPMER_DATA}/hipmer_ecoli_data RUNDIR=${SCRATCH}/runs/hipmer_ecoli_data hipmer_setup_ecoli_data.sh
+    - ./bootstrap_hipmer_env.sh HIPMER_MG250_DATA=${HIPMER_DATA}/hipmer_mg250_data RUNDIR=${SCRATCH}/runs/hipmer_mg250_data hipmer_setup_mg250_data.sh
+    - ./bootstrap_hipmer_env.sh HIPMER_CHR14_DATA=${HIPMER_DATA}/hipmer_chr14_data RUNDIR=${SCRATCH}/runs/hipmer_chr14_data hipmer_setup_chr14_data.sh
+    - ./bootstrap_hipmer_env.sh PATH=${PATH}:$HOME/install/bin SCRATCH=${SCRATCH}/runs test_hipmer.sh ecoli
+    - ./bootstrap_hipmer_env.sh PATH=${PATH}:$HOME/install/bin SCRATCH=${SCRATCH}/runs test_hipmer.sh mg250
+    - ./bootstrap_hipmer_env.sh PATH=${PATH}:$HOME/install/bin SCRATCH=${SCRATCH}/runs test_hipmer.sh chr14-benchmark
+
+#
+# edison
+#
+
+
+Edison:build:
+  stage: build
+  tags:
+    - Edison
+  script:
+    - set -e
+    - export HIPMER_DATA=${SCRATCH}
+    - export BASE=${SCRATCH}/tmp/gitlab-runner-scratch-Edison-${USER}
+    - export SCRATCH=${BASE}/inst-${CI_COMMIT_SHA}
+    - export INSTALL_PREFIX=${SCRATCH}
+    - mkdir -p ${BASE}
+    - find ${BASE} -maxdepth 1 '(' -name 'inst-*' -o -name '*hipmer-*' ')' -mtime +7 -type d -exec rm -rf '{}' ';'
+    - rm -rf ${SCRATCH}
+    - mkdir -p ${SCRATCH}/runs
+    - export HIPMER_ENV_SCRIPT=$(pwd)/.edison_deploy/env-debug.sh
+    - export BUILD_TMP=/tmp/build-${CI_COMMIT_SHA}
+    - mkdir -p ${BUILD_TMP}
+    - ./bootstrap_hipmer_env.sh DIST_CLEAN=1 TMPDIR=${BUILD_TMP} install
+    - export HIPMER_ENV_SCRIPT=$(pwd)/.edison_deploy/env.sh
+    - ./bootstrap_hipmer_env.sh DIST_CLEAN=1 TMPDIR=${BUILD_TMP} install
+    - rm -r ${BUILD_TMP}
+
+Edison:validation:
+  stage: validation
+  tags:
+    - Edison
+  script:
+    - set -e
+    - export GASNET_BACKTRACE=1
+    - export HIPMER_DATA=${SCRATCH}
+    - export BASE=${SCRATCH}/tmp/gitlab-runner-scratch-Edison-${USER}
+    - export SCRATCH=${BASE}/inst-${CI_COMMIT_SHA}
+    - export INSTALL_PREFIX=${SCRATCH}
+    - export CACHED_IO=0
+    - export AUTO_RESTART=0
+    - export HIPMER_ENV_SCRIPT=$(pwd)/.edison_deploy/env.sh
+    - ./bootstrap_hipmer_env.sh HIPMER_ECOLI_DATA=${HIPMER_DATA}/hipmer_ecoli_data RUNDIR=${SCRATCH}/runs/hipmer_ecoli_data hipmer_setup_ecoli_data.sh
+    - ./bootstrap_hipmer_env.sh HIPMER_MG250_DATA=${HIPMER_DATA}/hipmer_mg250_data RUNDIR=${SCRATCH}/runs/hipmer_mg250_data hipmer_setup_mg250_data.sh
+    - ./bootstrap_hipmer_env.sh HIPMER_CHR14_DATA=${HIPMER_DATA}/hipmer_chr14_data RUNDIR=${SCRATCH}/runs/hipmer_chr14_data hipmer_setup_chr14_data.sh
+    - salloc --nodes=2  --qos=debug --time=10:00  --ntasks-per-node=24 ./bootstrap_hipmer_env.sh SCRATCH=${SCRATCH}/runs sbatch_edison.sh test_hipmer.sh validation-mg validation-par_hmm
+    - export HIPMER_ENV_SCRIPT=$(pwd)/.edison_deploy/env-debug.sh
+    - salloc --nodes=2  --qos=debug --time=30:00  --ntasks-per-node=24 ./bootstrap_hipmer_env.sh SCRATCH=${SCRATCH}/runs sbatch_edison.sh test_hipmer.sh validation-mg_par_hmm
+
+
+Edison:accuracy:
+  stage: accuracy
+  tags:
+    - Edison
+  script:
+    - set -e
+    - export HIPMER_DATA=${SCRATCH}
+    - export BASE=${SCRATCH}/tmp/gitlab-runner-scratch-Edison-${USER}
+    - export SCRATCH=${BASE}/inst-${CI_COMMIT_SHA}
+    - export CACHED_IO=0
+    - export AUTO_RESTART=0
+    - export HIPMER_ENV_SCRIPT=$(pwd)/.edison_deploy/env.sh
+    - export INSTALL_PREFIX=${SCRATCH}
+    - ./bootstrap_hipmer_env.sh HIPMER_ECOLI_DATA=${HIPMER_DATA}/hipmer_ecoli_data RUNDIR=${SCRATCH}/runs/hipmer_ecoli_data hipmer_setup_ecoli_data.sh
+    - ./bootstrap_hipmer_env.sh HIPMER_MG250_DATA=${HIPMER_DATA}/hipmer_mg250_data RUNDIR=${SCRATCH}/runs/hipmer_mg250_data hipmer_setup_mg250_data.sh
+    - ./bootstrap_hipmer_env.sh HIPMER_CHR14_DATA=${HIPMER_DATA}/hipmer_chr14_data RUNDIR=${SCRATCH}/runs/hipmer_chr14_data hipmer_setup_chr14_data.sh
+    - salloc --nodes=16  --qos=debug --time=30:00  --ntasks-per-node=24 ./bootstrap_hipmer_env.sh SCRATCH=${SCRATCH}/runs sbatch_edison.sh test_hipmer.sh ecoli chr14-benchmark mg250
+#    - salloc --nodes=12 --qos=debug --time=15:00 --ntasks-per-node=24 ./bootstrap_hipmer_env.sh SCRATCH=${SCRATCH}/runs sbatch_edison.sh test_hipmer.sh chr14-benchmark
+#    - salloc --nodes=16 --qos=debug --time=16:00 --ntasks-per-node=24 ./bootstrap_hipmer_env.sh SCRATCH=${SCRATCH}/runs sbatch_edison.sh test_hipmer.sh mg250
+
+#
+# cori
+#
+
+Cori:build:
+  stage: build
+  tags:
+    - Cori
+  script:
+    - set -e
+    - export HIPMER_DATA=${SCRATCH}
+    - export BASE=${SCRATCH}/tmp/gitlab-runner-scratch-Cori-${USER}
+    - export SCRATCH=${BASE}/inst-${CI_COMMIT_SHA}
+    - export INSTALL_PREFIX=${SCRATCH}
+    - mkdir -p ${BASE}
+    - find ${BASE} -maxdepth 1 '(' -name 'inst-*' -o -name '*hipmer-*' ')' -mtime +7 -type d -exec rm -rf '{}' ';'
+    - rm -rf ${SCRATCH}
+    - mkdir -p ${SCRATCH}/runs
+    - export HIPMER_ENV_SCRIPT=$(pwd)/.cori_knl_deploy/env.sh
+    - export INSTALL_PREFIX=${SCRATCH}
+    - export BUILD_TMP=/tmp/build-${CI_COMMIT_SHA}
+    - mkdir -p ${BUILD_TMP}
+    - ./bootstrap_hipmer_env.sh DIST_CLEAN=1 TMPDIR=${BUILD_TMP} install
+    - export HIPMER_ENV_SCRIPT=$(pwd)/.cori_deploy/env-debug.sh
+    - ./bootstrap_hipmer_env.sh DIST_CLEAN=1 TMPDIR=${BUILD_TMP} install
+    - export HIPMER_ENV_SCRIPT=$(pwd)/.cori_deploy/env.sh
+    - ./bootstrap_hipmer_env.sh DIST_CLEAN=1 TMPDIR=${BUILD_TMP} install
+    - rm -r ${BUILD_TMP}
+
+Cori:validation:
+  stage: validation
+  tags:
+    - Cori
+  script:
+    - set -e
+    - export GASNET_BACKTRACE=1
+    - export HIPMER_DATA=${SCRATCH}
+    - export BASE=${SCRATCH}/tmp/gitlab-runner-scratch-Cori-${USER}
+    - export SCRATCH=${BASE}/inst-${CI_COMMIT_SHA}
+    - export INSTALL_PREFIX=${SCRATCH}
+    - export CACHED_IO=0
+    - export AUTO_RESTART=0
+    - export HIPMER_ENV_SCRIPT=$(pwd)/.cori_deploy/env.sh
+    - ./bootstrap_hipmer_env.sh HIPMER_ECOLI_DATA=${HIPMER_DATA}/hipmer_ecoli_data RUNDIR=${SCRATCH}/runs/hipmer_ecoli_data hipmer_setup_ecoli_data.sh
+    - ./bootstrap_hipmer_env.sh HIPMER_MG250_DATA=${HIPMER_DATA}/hipmer_mg250_data RUNDIR=${SCRATCH}/runs/hipmer_mg250_data hipmer_setup_mg250_data.sh
+    - ./bootstrap_hipmer_env.sh HIPMER_CHR14_DATA=${HIPMER_DATA}/hipmer_chr14_data RUNDIR=${SCRATCH}/runs/hipmer_chr14_data hipmer_setup_chr14_data.sh
+    - salloc -C haswell --nodes=2  --qos=debug --time=15:00  --ntasks-per-node=32 ./bootstrap_hipmer_env.sh SCRATCH=${SCRATCH}/runs sbatch_cori.sh test_hipmer.sh validation validation-mg validation-par_hmm
+#    - salloc -C haswell --nodes=2  --qos=debug --time=5:00  --ntasks-per-node=32 ./bootstrap_hipmer_env.sh SCRATCH=${SCRATCH}/runs sbatch_cori.sh test_hipmer.sh validation-mg
+#    - salloc -C haswell --nodes=2  --qos=debug --time=5:00  --ntasks-per-node=32 ./bootstrap_hipmer_env.sh SCRATCH=${SCRATCH}/runs sbatch_cori.sh test_hipmer.sh validation-par_hmm
+#    - export HIPMER_ENV_SCRIPT=$(pwd)/.cori_deploy/env-debug.sh
+#    - salloc -C haswell --nodes=2  --qos=debug --time=15:00  --ntasks-per-node=32 ./bootstrap_hipmer_env.sh SCRATCH=${SCRATCH}/runs sbatch_cori.sh test_hipmer.sh validation
+
+after_script:
+  - echo "Done"
+

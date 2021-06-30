@@ -1,0 +1,14 @@
+If you choose to run embedded Perl code into hipmer, some preparation is requires.
+
+First set the HIPMER_EMBED_PERL build option in the environment.  bootstrap_hipmer.sh will pick it up and put it into the CMake environment.
+Second ensure that the version of Perl you would like to use is in the PATH of the env.sh script you are using to build
+Third, some compilers (looking at you Cray) require static libraries to link with and Perl, generally does not come that way.  You can either attempt to set LD_LIBRARY_PATH in your env.sh script or build a new version of Perl that has a static library.
+
+To build a static version of the perl library, this worked on NERSC's cori: (YMMV)
+
+./Configure -Duseshrplib=n -Duse64bitall -Uusethreads -Dcc=cc -Dprefix=$SCRATCH/perl2 -Uusedl -A define:libs="-lm -lcrypt" -Dnoextension="ExtUtils/CBuilder ExtUtils/Constant ExtUtils/Install ExtUtils/MakeMaker ExtUtils/Manifest ExtUtils/Miniperl ExtUtils/ParseXS" -de  \
+  && make \
+  && make test \
+  && make install
+
+Then in the env.sh, export PATH=$SCRATCH/perl2/bin:$PATH
